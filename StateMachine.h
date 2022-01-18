@@ -6,6 +6,7 @@
 #include <StackArray.h>
 #include "Hardware.h"
 #include "BundleManager.h"
+#include "StepperDriver.h"
 
 
 class State {
@@ -68,9 +69,9 @@ class CounterState : public State {
     
 };
 
-class WindingState {
+class WindingState : public State {
   public:
-    void onEnter();
+    void onEntry();
     void onUpdate();
     void onExit();
     bool shouldExit();

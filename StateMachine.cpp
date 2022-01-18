@@ -191,3 +191,28 @@ void CounterState::updateDisplay() {
   DisplayManager::getInstance()->print(m_varName + ": " + String(m_var) + " ");
   DisplayManager::getInstance()->printMenuArrow();
 }
+
+
+/// Winding State
+
+void WindingState::onEntry() {
+
+  DisplayManager::getInstance()->clear();
+  DisplayManager::getInstance()->print("Winding");
+
+  Bundle* bundle = BundleManager::getInstance()->getBundle();
+  StepperDriver::getInstance()->setTarget(bundle->getTargetSpeed(), bundle->getTargetSpeed());
+  StepperDriver::getInstance()->startMotor();
+}
+
+void WindingState::onUpdate() {
+  StepperDriver::getInstance()->updateMotor();
+}
+
+void WindingState::onExit() {
+  StepperDriver::getInstance()->stopMotor();
+}
+
+bool WindingState::shouldExit() {
+  return ButtonManager::getInstance()->selectReleased();
+}
