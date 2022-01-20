@@ -34,6 +34,8 @@ void loop() {
 
 ISR(TIMER1_COMPA_vect)
 {
+    DisplayManager::getInstance()->print("A");
     StepperDriver::getInstance()->toggle();
+    DisplayManager::getInstance()->print("B");
    
 }//ISR(TIMER1_COMPA_vect)
