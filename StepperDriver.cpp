@@ -57,7 +57,7 @@ void StepperDriver::setup() {
   //set timer 1 to tick at 2MHz
   TCCR1B = (1 << CS11);   ///8 = 2MHz clock rate (500nS per tick)
 
-
+  digitalWrite(10, HIGH);
 
 }
 
@@ -74,7 +74,7 @@ void StepperDriver::startMotor() {
     TIMSK1 |= (1 << OCIE1A);         //enable OC1A interrupt
    
 
-    PORTB |= 0b10000000;
+//    PORTB |= driver1Enable;
     
     interrupts();
 }
