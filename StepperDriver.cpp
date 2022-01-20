@@ -20,6 +20,8 @@ StepperDriver::StepperDriver() {
   
   driver2Pulse = B00001000;
   driver2Enable = B00010000;
+
+  setup();
 }
 
 void StepperDriver::setPPR(int ppr) {
