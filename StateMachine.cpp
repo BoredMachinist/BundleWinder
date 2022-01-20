@@ -62,7 +62,7 @@ void MenuState::onUpdate() {
   if (ButtonManager::getInstance()->selectReleased()) {
     switch(currentItem) {
       case START:
-        //TODO Push a WindingState
+        StateManager::getInstance()->pushState(new WindingState());
         break; 
       case SPEED:
         StateManager::getInstance()->pushState(new CounterState(String("Speed"), BundleManager::getInstance()->getBundle()->getTargetSpeed(), 3, SetSpeedCallback::instance()));
@@ -194,6 +194,10 @@ void CounterState::updateDisplay() {
 
 
 /// Winding State
+
+WindingState::WindingState() {
+  
+}
 
 void WindingState::onEntry() {
 

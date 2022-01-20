@@ -14,6 +14,12 @@ StepperDriver* StepperDriver::ourInstance = nullptr;
 
 
 StepperDriver::StepperDriver() {
+  driver1Pulse = B00000001;
+  driver1Dir = B00000010;
+  driver1Enable = B00000100;
+  
+  driver2Pulse = B00001000;
+  driver2Enable = B00010000;
 }
 
 void StepperDriver::setPPR(int ppr) {
