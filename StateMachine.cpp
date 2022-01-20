@@ -205,8 +205,11 @@ void WindingState::onEntry() {
   DisplayManager::getInstance()->print("Winding");
 
   Bundle* bundle = BundleManager::getInstance()->getBundle();
+  DisplayManager::getInstance()->print("1");
   StepperDriver::getInstance()->setTarget(bundle->getTargetSpeed(), bundle->getTargetSpeed());
+  DisplayManager::getInstance()->print("2");
   StepperDriver::getInstance()->startMotor();
+  DisplayManager::getInstance()->print("3");
 }
 
 void WindingState::onUpdate() {

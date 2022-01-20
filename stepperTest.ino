@@ -27,9 +27,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-
-  StateManager::getInstance()->updateStates();
   ButtonManager::getInstance()->update();
+  StateManager::getInstance()->updateStates();
+  
 }
 
 ISR(TIMER1_COMPA_vect)
