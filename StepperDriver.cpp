@@ -107,7 +107,7 @@ void StepperDriver::toggle() {
     if(!m_pulse)
     {
         m_pulse = true;
-        PORTB = PORTB | driver1Pulse;
+        PORTB = PORTB | B00000001;
 
         
         //digitalWrite( LED_BUILTIN, HIGH );
@@ -127,7 +127,7 @@ void StepperDriver::toggle() {
     else
     {
         m_pulse = false;
-        PORTB = PORTB & ~driver1Pulse;
+        PORTB = PORTB & ~B00000001;
 
         m_current_count++;
 
