@@ -5,6 +5,7 @@
                                                                                                     
 
 void setup() {
+  StepperDriver::init();
   Serial.begin(9600);
   // put your setup code here, to run once:
 
@@ -15,7 +16,8 @@ void setup() {
   BundleManager::init();
   
   StateManager::init();
-  Serial.println(4);
+
+  
   
   
 //126 links 
