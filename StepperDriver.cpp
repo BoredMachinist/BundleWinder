@@ -61,7 +61,7 @@ void StepperDriver::setup() {
 
   digitalWrite(10, HIGH);
 
-  setPPR(200);
+  setPPR(1600);
 }
 
 void StepperDriver::startMotor() {

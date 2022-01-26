@@ -36,8 +36,8 @@ void loop() {
 
 ISR(TIMER1_COMPA_vect)
 {
-    DisplayManager::getInstance()->print("A");
+    if (StepperDriver::getInstance() == nullptr)
+      return;
     StepperDriver::getInstance()->toggle();
-    DisplayManager::getInstance()->print("B");
    
 }//ISR(TIMER1_COMPA_vect)
