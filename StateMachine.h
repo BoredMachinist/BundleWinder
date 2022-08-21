@@ -65,7 +65,6 @@ class CounterState : public State {
 
     void updateDisplay();
 
-    static int* scalingRate;
     
 };
 

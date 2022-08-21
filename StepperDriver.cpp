@@ -2,158 +2,87 @@
 #include <Arduino.h>
 
 
-#define INIT_STEP_DELAY     10000           //#     uS = N*500nS    5mS initial step delay
-#define STEP_PULSE_WIDTH    40             //#     uS = N*500nS    50uS step pulse width
+#define WINDER_STEPS_PER_LOOP 10500
+#define DEFAULT_WINDER_LOOPS 400
+#define WINDER_MAX_SPEED 400
+#define WINDER_ACCELERATION 50.0
 
+#define GREASER_ACCELERATION 50.0
 
-#define ACCELERATION_TIME_MILLIS 8000
-#define STARTING_TICKS 6500
+// Create the motor shield object with the default I2C address
+    Adafruit_MotorShield AFMS;
+// Or, create it with a different I2C address (say for stacking)
+// Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61);
+
+    // Connect a stepper motor with 200 steps per revolution (1.8 degree)
+    // to motor port #2 (M3 and M4)
+    Adafruit_StepperMotor *myStepper1 = AFMS.getStepper(200,1);
+
+    Adafruit_StepperMotor *myStepper2 = AFMS.getStepper(200,2);
+
+    void forwardstep1() {
+      myStepper1->quickstep(FORWARD);
+    }
+    void backwardstep1() {
+      myStepper1->quickstep(BACKWARD);
+    }
+    void forwardstep2() {
+      myStepper2->quickstep(FORWARD);
+    }
+    void backwardstep2() {
+      myStepper2->quickstep(BACKWARD);
+    }
 
 
 StepperDriver* StepperDriver::ourInstance = nullptr;
 
 
-StepperDriver::StepperDriver() {
-  driver1Pulse = B00000001;
-  driver1Dir = B00000010;
-  driver1Enable = B00000100;
-  
-  driver2Pulse = B00001000;
-  driver2Enable = B00010000;
+StepperDriver::StepperDriver():
+  windMotor(forwardstep2, backwardstep2),
+  greaseMotor(forwardstep1, backwardstep1)
+  {
 
   setup();
 }
 
-void StepperDriver::setPPR(int ppr) {
-  m_pulsePerRevolution = ppr;
-}
 
-void StepperDriver::setTarget(double rpm, double revolutions) {
-  double RPS = rpm/60.0;
-  unsigned int clicksPerSecond = RPS * m_pulsePerRevolution;
+void StepperDriver::setTarget(int speed, int ratio, int wraps) {
+  windMotor.setMaxSpeed(speed);
+  greaseMotor.setMaxSpeed(speed/ratio);
 
-
-  unsigned int newSteps = 16000000/(8*clicksPerSecond) - 1;
-
-  m_target_speed = newSteps; // PRoblems if this exceeds 65536. On 200 pulses per revolution this means no slower than 9rpma
-  Serial.print("TargetSpeed");
-  Serial.print(m_target_speed);
-  m_current_speed = STARTING_TICKS;
-
-  unsigned int nSteps = revolutions * m_pulsePerRevolution;
-
-  m_target_count = nSteps;
-  m_current_count = 0;
+  DisplayManager::getInstance()->print("targeted" + (String)wraps);
+  windMotor.moveTo((long)(wraps) * (long)WINDER_STEPS_PER_LOOP);
+  greaseMotor.moveTo((long)(wraps) * (long)WINDER_STEPS_PER_LOOP);
+  
  
 }
 
 void StepperDriver::setup() {
-  pinMode(8,OUTPUT);
 
+  AFMS.begin();
 
-
-  TCCR1A = 0; //WGM 0, OC1A disconnected from PB1 to start
-  TCCR1B = 0;
-  TIMSK1 = 0;
-
-  //set timer 1 to tick at 2MHz
-  TCCR1B = (1 << CS11);   ///8 = 2MHz clock rate (500nS per tick)
-
-  digitalWrite(10, HIGH);
-
-  setPPR(1600);
+  myStepper1->onestep(FORWARD,DOUBLE);
+  myStepper2->onestep(FORWARD,DOUBLE);
+  
+  windMotor.setAcceleration(WINDER_ACCELERATION);
+  greaseMotor.setAcceleration(GREASER_ACCELERATION);
 }
 
 void StepperDriver::startMotor() {
-  startTime = millis();
   
-  noInterrupts();
-  //grab current count and add an arbitrary count to give initial step delay
-  OCR1A = TCNT1 + INIT_STEP_DELAY;
-
-  //
-    TCCR1A |= (1 << COM1A0 );        //connect pin PB1 to OC1A; set pin on next compare
-    TIFR1 |= (1 << OCF1A);          //clear any pending interrupt
-    TIMSK1 |= (1 << OCIE1A);         //enable OC1A interrupt
-   
-
-//    PORTB |= driver1Enable;
-    
-    interrupts();
 }
 
 void StepperDriver::stopMotor() {
-  noInterrupts();
-    TCCR1A &= ~(1 << COM1A0 );        //connect pin PB1 to OC1A; set pin on next compare
-    TIFR1 &= ~(1 << OCF1A);          //clear any pending interrupt
-    TIMSK1 &= ~(1 << OCIE1A);         //enable OC1A interrupt 
-    interrupts();
+  windMotor.stop();
+  greaseMotor.stop();
 }
 
 void StepperDriver::updateMotor() {
-  int now = millis();
-
-  if ((now - startTime) > ACCELERATION_TIME_MILLIS) {
-    return;
-  }
-
-  int adjust = (float)(now - startTime) / (float)ACCELERATION_TIME_MILLIS * (65000 - m_target_speed);
-  m_current_speed = 65000 - adjust;
-  Serial.println(m_current_speed);
+  windMotor.run();
+  greaseMotor.run();
 }
 
-void StepperDriver::toggle() {
-  static unsigned int
-        oldOC;
-       
-    //OC1A occurred; is pin high or low now?
-    if(!m_pulse)
-    {
-        m_pulse = true;
-        PORTB = PORTB | B00000001;
-
-        
-        //digitalWrite( LED_BUILTIN, HIGH );
-
-        //Serial.println("High");
-        
-        //save time of OC
-        oldOC = OCR1A;
-        //set up for width of step pulse
-        OCR1A = oldOC + STEP_PULSE_WIDTH;       
-        //set to clear the pin on the next compare
-        TCCR1A |= (1 << COM1A1 );
-        TCCR1A &= ~(1 << COM1A0 );        
-        
-   
-    }//if
-    else
-    {
-        m_pulse = false;
-        PORTB = PORTB & ~B00000001;
-
-        m_current_count++;
-
-        if (m_current_count >= m_target_count) {
-          stopMotor();
-          return;
-        }
-        
-        //digitalWrite(LED_BUILTIN, LOW);
-
-        //Serial.println("Low");
-        
-        if (m_current_speed > m_target_speed) {
-          m_current_speed -= 80;
-         
-          
-        }
-        //no, use constant
-        OCR1A = oldOC + m_current_speed;       
-       
-        //set pin on next compare
-        TCCR1A |= (1 << COM1A0 );       
-        TCCR1A &= ~(1 << COM1A1 );           
-
-    }//else
+boolean StepperDriver::isWinding() {
+  Serial.println(windMotor.distanceToGo());
+  return windMotor.distanceToGo() != 0;
 }

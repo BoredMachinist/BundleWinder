@@ -5,18 +5,21 @@
                                                                                                     
 
 void setup() {
-  StepperDriver::init();
-  Serial.begin(9600);
+  delay(1000);
+  Serial.begin(115200);
   // put your setup code here, to run once:
 
-  
+  Serial.println("Hello Mother Hello Father");
+  delay(500);
   DisplayManager::init();
+  Serial.println("Here I am at ");
   ButtonManager::init();
 
   BundleManager::init();
-  
+  Serial.println("Camp Granada");
   StateManager::init();
 
+  StepperDriver::init();
   
   
   
@@ -30,14 +33,11 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   ButtonManager::getInstance()->update();
+ 
   StateManager::getInstance()->updateStates();
-  
-}
 
-ISR(TIMER1_COMPA_vect)
-{
-    if (StepperDriver::getInstance() == nullptr)
-      return;
-    StepperDriver::getInstance()->toggle();
+   DisplayManager::getInstance()->update();
+  
    
-}//ISR(TIMER1_COMPA_vect)
+  //StepperDriver::getInstance()->updateMotor();
+}

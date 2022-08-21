@@ -22,5 +22,6 @@ BundleManager::BundleManager() {
 }
 
 void BundleManager::defaultBundle() {
-  currentBundle = new Bundle(400, 100.0, 10);
+  currentBundle = new Bundle(1 , 420, 4
+   );
 }

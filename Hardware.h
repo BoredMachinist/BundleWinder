@@ -1,6 +1,9 @@
-#include <LiquidCrystal_I2C.h>
-#include <Arduino.h>
 
+#include <Arduino.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
 
 
 #ifndef H_HARDWARE
@@ -19,6 +22,8 @@ class DisplayManager {
 
     ~DisplayManager();
 
+    void update();
+
     void print(String s);
     void printCentered(String s);
     void clear();
@@ -31,10 +36,9 @@ class DisplayManager {
     DisplayManager();
     static DisplayManager* ourInstance;
 
-    static uint8_t* menuArrow;
 
     
-    LiquidCrystal_I2C lcd;
+    Adafruit_SH1107 display;
 };
 
 class ButtonManager {

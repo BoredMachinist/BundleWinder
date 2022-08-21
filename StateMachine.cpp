@@ -14,12 +14,17 @@ StateManager::StateManager() :
 }
 
 void StateManager::updateStates() {
+
   if (stateStack.peek()->shouldExit()) {
     stateStack.pop()->onExit();
     stateStack.peek()->onEntry();
-  }
-  
+  } else {
+
   stateStack.peek()->onUpdate();
+  
+  }
+   
+  
 
   
 }
@@ -46,7 +51,7 @@ void MenuState::onUpdate() {
   if (ButtonManager::getInstance()->upReleased()) {
     currentItem = static_cast<MenuItem>(static_cast<int>(currentItem) - 1);
     if (currentItem == INVALID) {
-      currentItem = TOTAL - 1;
+      currentItem = static_cast<MenuItem>(static_cast<int>(TOTAL) - 1);
     }
     updateDisplay();
   }
@@ -54,7 +59,7 @@ void MenuState::onUpdate() {
   if (ButtonManager::getInstance()->downReleased()) {
     currentItem = static_cast<MenuItem>(static_cast<int>(currentItem) + 1);
     if (currentItem == TOTAL) {
-      currentItem = INVALID + 1;
+      currentItem = static_cast<MenuItem>(static_cast<int>(INVALID) + 1);
     }
     updateDisplay();
   }
@@ -62,7 +67,9 @@ void MenuState::onUpdate() {
   if (ButtonManager::getInstance()->selectReleased()) {
     switch(currentItem) {
       case START:
+        Serial.println("To Wind");
         StateManager::getInstance()->pushState(new WindingState());
+        
         break; 
       case SPEED:
         StateManager::getInstance()->pushState(new CounterState(String("Speed"), BundleManager::getInstance()->getBundle()->getTargetSpeed(), 3, SetSpeedCallback::instance()));
@@ -117,7 +124,7 @@ void MenuState::updateDisplay() {
 #define COUNTER_INCREMENT 3000
 
 static const int scalingRateData[] = {1, 5, 10, 25, 100, 200};
-int* CounterState::scalingRate = scalingRateData;
+
 
 CounterState::CounterState(String varName, int startVal, int scale, IntSetCallback* setFunc) :
     m_varName(varName),
@@ -163,7 +170,7 @@ void CounterState::onUpdate() {
         m_nextTick += COUNTER_RATE;
 
         int index = floor(((float)now - (float)m_holdStart)/(float)COUNTER_INCREMENT);
-        int increment = scalingRate[min(m_useScaling,index)];
+        int increment = scalingRateData[min(m_useScaling,index)];
         if (m_isCountingUp) {
           m_var += increment;
         } else {
@@ -187,7 +194,7 @@ bool CounterState::shouldExit() {
 void CounterState::updateDisplay() {
   DisplayManager::getInstance()->clear();
   DisplayManager::getInstance()->print("Edit: ");
-  DisplayManager::getInstance()->cursor(0,1);
+  DisplayManager::getInstance()->cursor(0,8);
   DisplayManager::getInstance()->print(m_varName + ": " + String(m_var) + " ");
   DisplayManager::getInstance()->printMenuArrow();
 }
@@ -200,13 +207,15 @@ WindingState::WindingState() {
 }
 
 void WindingState::onEntry() {
+  Serial.println("Winding");
 
   DisplayManager::getInstance()->clear();
   DisplayManager::getInstance()->print("Winding");
 
   Bundle* bundle = BundleManager::getInstance()->getBundle();
-  StepperDriver::getInstance()->setTarget(bundle->getTargetSpeed(), bundle->getTargetSpeed());
-  StepperDriver::getInstance()->startMotor();
+  StepperDriver::getInstance()->setTarget(bundle->getTargetSpeed(), bundle->getRatio(), bundle->getTargetWraps());
+  delay(100);
+  
 }
 
 void WindingState::onUpdate() {
@@ -216,8 +225,9 @@ void WindingState::onUpdate() {
 
 void WindingState::onExit() {
   StepperDriver::getInstance()->stopMotor();
+  Serial.println("Exit Wind");
 }
 
 bool WindingState::shouldExit() {
-  return ButtonManager::getInstance()->selectReleased();
+  return !StepperDriver::getInstance()->isWinding() || ButtonManager::getInstance()->selectReleased();
 }
